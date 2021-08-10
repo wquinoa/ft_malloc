@@ -12,7 +12,7 @@ all: $(NAME)
 
 $(NAME): $(OBJ)
 	ar rcs $(NAME) $^
-	gcc main.c $(NAME) -o test.out
+	gcc -g main.c $(NAME) -o test.out
 
 clean:
 	rm -rf $(OBJ)
@@ -22,6 +22,9 @@ fclean: clean
 
 re: fclean all
 
-run:
-	rm a.out
-	gcc $(SRC)
+run: $(SRC)
+	rm -rf a.out
+	gcc -g  $(SRC)
+
+testfile:
+	gcc garbage.c -o garbage.out && ./garbage.out

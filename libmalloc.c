@@ -2,7 +2,6 @@
 
 void stack_push(t_node **head, t_node *new)
 {
-
 	if (!*head) {
 		new->next = NULL;
 		*head = new;
@@ -23,6 +22,12 @@ t_node *stack_pop(t_node **head)
 	return tmp;
 }
 
+size_t  small_tiny_or_large(size_t index) {
+    char const sizes[3] = {TINY_ALLOC, SMALL_ALLOC, LARGE};
+
+    return sizes[index];
+}
+
 /*
  * Zone anatomy:
  * [zone_head][block_hd][block_mem]
@@ -33,24 +38,43 @@ t_node *stack_pop(t_node **head)
  * [16 bytes][size bytes][16 bytes][size bytes]...[padding]
  */
 
-void 	create_block_stack(t_node **zone, size_t size)
+void 	create_block_stack(t_node **zone, size_t type)
 {
-	t_node			*head;
-	t_node			*current;
-	size_t const	increment = sizeof(t_node) + size;
-	char 			*mem;
+    char 			*mem;
+    t_node			**head;
+    t_node 		    *current;
+    size_t const	increment = sizeof(t_node) + small_tiny_or_large(type);
 	char const		*end = (char *)*zone + SMALL_ZONE_SIZE;
 
-	head = *zone + 1;
-	mem = (char *)(*zone + 2);
+	head = zone + 1;
+	mem = (char *)((*zone) + 2);
 	while (mem + increment < end)
 	{
 		current = (t_node *)mem;
+		current->zone_type = type;
 		current->is_free = 1;
-		stack_push(&head, current);
+		stack_push(head, current);
 		mem += increment;
 	}
 }
+
+//void    iterate_zone(t_node **zone, size_t type, void (*action)(t_node *, t_node *))
+//{
+//    char 			*mem;
+//    t_node			**head;
+//    t_node 		    *current;
+//    size_t const	increment = sizeof(t_node) + small_tiny_or_large(type);
+//    char const		*end = (char *)*zone + SMALL_ZONE_SIZE;
+//
+//    head = zone + 1;
+//    mem = (char *)((*zone) + 2);
+//    while (mem + increment < end)
+//    {
+//        current = (t_node *)mem;
+//        action();
+//        mem += increment;
+//    }
+//}
 
 /*
  * Decides which type of zone is to be allocated and
@@ -74,7 +98,6 @@ void 	*allocate_zone(size_t size)
 	new->free_stack = NULL;
 	return new;
 }
-
 
 /*
  * Tries to find a block of requested size.
@@ -105,13 +128,14 @@ t_node	*find_suitable_block(int type)
 	else
 		to_allocate = &zone_prev->next;
 	*to_allocate = allocate_zone(SMALL_ALLOC); // @todo check alloc
-	create_block_stack((t_node **)to_allocate, TINY_ALLOC + type * (SMALL_ALLOC - TINY_ALLOC));
+	if (!*to_allocate)
+        return NULL;
+	create_block_stack((t_node **)to_allocate, type);
 	return find_suitable_block(type);
 }
 
 void	*handle_large_alloc(size_t size)
 {
-
 	(void)size;
 	return NULL;
 }
@@ -134,7 +158,6 @@ void 	*handle_small_alloc(size_t size)
 	return block_raw + 1;
 }
 
-
 void	*ft_malloc(size_t size)
 {
 	if (size == 0)
@@ -144,16 +167,18 @@ void	*ft_malloc(size_t size)
 	return handle_small_alloc(size);
 }
 
-#include <stdio.h>
-int main() {
 
+int main() {
+#include <stdio.h>
+#include <string.h>
 	char *ptr = ft_malloc(13);
 
 	printf("%s\n", "---");
-	printf("sizeof(t_header) = %lu\n", sizeof(t_block_hdr));
-	printf("sizeof(t_footer) = %lu\n", sizeof(t_block_ftr));
+	printf("sizeof(t_header) = %lu\n", sizeof(t_zone));
+	printf("sizeof(t_footer) = %lu\n", sizeof(t_zone));
 	printf("sizeof(t_zone) = %lu\n", sizeof(t_zone));
 	printf("%s\n", "---");
 
-	printf("%p\n", ptr);
+    strcpy(ptr, "Hello world");
+	printf("%p: %s\n", ptr, ptr);
 }

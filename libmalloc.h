@@ -18,8 +18,8 @@
 # define LARGE 2
 
 // Overhead cost-related
-# define HDR_SIZE sizeof(t_block_hdr)
-# define FTR_SIZE sizeof(t_block_ftr)
+# define HDR_SIZE sizeof(t_node)
+# define FTR_SIZE sizeof(t_node)
 # define OVERHEAD HDR_SIZE + FTR_SIZE
 
 # define ALIGN(size, bound) (((size) + (bound - 1)) & ~(bound - 1))
@@ -40,29 +40,31 @@ void			ft_free(void *ptr);
 void			*ft_malloc(size_t size);
 //void			*realloc(void *ptr, size_t size);
 
-typedef struct s_node {
+enum    e_nodeflags {
+    m_zone_type = (1 << 1) - 1,
+    f_free_bit = (1 << 2),
+    m_magic = ~((1 << 3) - 1),
+};
+
+typedef struct      s_node {
 	struct s_node	*next;
-	size_t 			is_free;
-	//char			*memory;
-}				t_node;
+	size_t          reserved: 28;
+    size_t   		is_free: 1;
+    size_t          zone_type: 2;
+}				    t_node;
 
 typedef struct {
-	size_t			size;
-	size_t			allocated;
-}					t_block_hdr;
+    struct s_node   *next;
+    size_t          metadata;
+}                   t_free_node;
 
 typedef struct		s_zone {
 	struct s_zone 	*next;
 	struct s_node	*free_stack;
-	// padding 8
-	// padding 8
-	//char			*memory;
+    size_t          reserved: 54;
+    size_t          free_blocks: 8;
+    size_t          type: 2;
 }					t_zone;
-
-typedef struct {
-	size_t 			size;
-	struct s_zone	*zone_start;
-}					t_block_ftr;
 
 static struct s_zone *g_zones[3];
 
