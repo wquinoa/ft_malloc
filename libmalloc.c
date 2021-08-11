@@ -1,184 +1,120 @@
 #include "libmalloc.h"
+#include <stdlib.h>
+#include <stdio.h>
 
-void stack_push(t_node **head, t_node *new)
-{
-	if (!*head) {
-		new->next = NULL;
-		*head = new;
-	}
-	new->next = *head;
-	*head = new;
+void 	assert(int x) {
+	if (x)
+		abort();
 }
 
-t_node *stack_pop(t_node **head)
+void 	set_sentinel_blocks(t_block *first, t_block* end, size_t sz)
 {
-	t_node *tmp;
+	t_block *last = end - 1;
 
-	if (!*head)
-		return NULL;
-	tmp = *head;
-	*head = (*head)->next;
-	tmp->next = NULL;
-	return tmp;
+	first->prev_size = 0;
+	first->prev_in_use = 1;
+	first->node_size = sz;
+	first->node_in_use = 0;
+
+	last->prev_size = sz;
+	last->prev_in_use = 0;
+	last->node_size = 0;
+	last->node_in_use = 1;
+	printf("block spans %zu bytes\n", substract_addr(last, first + 1));
+	printf("should span: %zu\n", 4096 - OVERHEAD - sizeof(t_zone));
 }
 
-size_t  small_tiny_or_large(size_t index) {
-    char const sizes[3] = {TINY_ALLOC, SMALL_ALLOC, LARGE};
-
-    return sizes[index];
-}
-
-/*
- * Zone anatomy:
- * [zone_head][block_hd][block_mem]
- * [16 bytes] [16 bytes][ Memory ][padding]
- * ( t_zone ) (zone + 1)(zone + 2)
- *
- * Memory anatomy:
- * [16 bytes][size bytes][16 bytes][size bytes]...[padding]
- */
-
-void 	create_block_stack(t_node **zone, size_t type)
+t_zone 	*zone_init(t_zone *new, size_t sz)
 {
-    char 			*mem;
-    t_node			**head;
-    t_node 		    *current;
-    size_t const	increment = sizeof(t_node) + small_tiny_or_large(type);
-	char const		*end = (char *)*zone + SMALL_ZONE_SIZE;
-
-	head = zone + 1;
-	mem = (char *)((*zone) + 2);
-	while (mem + increment < end)
-	{
-		current = (t_node *)mem;
-		current->zone_type = type;
-		current->is_free = 1;
-		stack_push(head, current);
-		mem += increment;
-	}
-}
-
-//void    iterate_zone(t_node **zone, size_t type, void (*action)(t_node *, t_node *))
-//{
-//    char 			*mem;
-//    t_node			**head;
-//    t_node 		    *current;
-//    size_t const	increment = sizeof(t_node) + small_tiny_or_large(type);
-//    char const		*end = (char *)*zone + SMALL_ZONE_SIZE;
-//
-//    head = zone + 1;
-//    mem = (char *)((*zone) + 2);
-//    while (mem + increment < end)
-//    {
-//        current = (t_node *)mem;
-//        action();
-//        mem += increment;
-//    }
-//}
-
-/*
- * Decides which type of zone is to be allocated and
- * requests a new zone of approx getpagesize() bytes
- * and splits the zone into TINY or SMALL blocks.
- * Returns NULL if there's no memory left.
- */
-
-void 	*allocate_zone(size_t size)
-{
-	t_zone *new;
-	size_t intermediate_size;
-	size_t final_size;
-
-	intermediate_size = size <= SMALL_ALLOC ? SMALL_ZONE_SIZE : size;
-	final_size = ALIGN(intermediate_size, getpagesize());
-	new = mmap(NULL, final_size, FT_PROT_FLAGS, FT_MAP_FLAGS, -1, 0);
 	if (!new)
-		return NULL;
+		return (NULL);
 	new->next = NULL;
-	new->free_stack = NULL;
-	return new;
+	new->end = advance_addr(new, sz);
+	new->leftover_mem = sz - OVERHEAD - sizeof(t_zone);
+	set_sentinel_blocks((t_block *)(new + 1), new->end, new->leftover_mem);
+	return (new);
 }
 
-/*
- * Tries to find a block of requested size.
- * if there aren't any available, requests a new page.
- * returns:
- *  - a pointer to a suitable memory block on success
- *	- NULL if no memory left @todo refactor
- */
-
-t_node	*find_suitable_block(int type)
+t_zone 	*zone_create(size_t sz, size_t zone_idx)
 {
-	t_zone *zone_curr = g_zones[type];
-	t_zone *zone_prev;
-	t_zone **to_allocate;
-	t_node *block;
+	t_zone	*new;
+	static const size_t zone_sizes[3] = { ZONE_TINY, ZONE_SMALL, ZONE_LARGE };
+	size_t 	effective_mem;
 
-	zone_prev = NULL;
-	while (zone_curr)
-	{
-		block = stack_pop(&zone_curr->free_stack);
-		if (block)
-			return block;
-		zone_prev = zone_curr;
-		zone_curr = zone_curr->next;
-	}
-	if (!zone_prev)
-		to_allocate = &g_zones[type];
+	if (zone_idx == LARGE)
+		effective_mem = align(sz, getpagesize());
 	else
-		to_allocate = &zone_prev->next;
-	*to_allocate = allocate_zone(SMALL_ALLOC); // @todo check alloc
-	if (!*to_allocate)
-        return NULL;
-	create_block_stack((t_node **)to_allocate, type);
-	return find_suitable_block(type);
+		effective_mem = zone_sizes[zone_idx];
+	new = mmap(NULL, effective_mem, FT_PROT_FLAGS, FT_MAP_FLAGS, -1, 0);
+	return (zone_init(new, effective_mem));
 }
 
-void	*handle_large_alloc(size_t size)
+void	add_zone(t_zone **victim, t_zone *new)
 {
-	(void)size;
+	t_zone *tmp;
+
+	if (!*victim)
+	{
+		*victim = new;
+		return ;
+	}
+	tmp = *victim;
+	*victim = new;
+	new->next = tmp;
+}
+
+void 	set_block_in_use(t_block *block, size_t sz)
+{
+	t_block *mid;
+	t_block *old_end;
+
+	old_end = block + to_cell_size(sz) + 1;
+	old_end->prev_size = mid->node_size;
+	old_end->prev_size = 1;
+
+	mid = block + 1 + to_cell_size(sz);
+	mid->prev_in_use = 1;
+	mid->prev_size = sz;
+	mid->node_size = block->node_size - sizeof(t_block) - sz;
+
+	block->node_in_use = 1;
+	block->node_size = sz;
+}
+
+void 	*find_suitable_block(size_t sz, int zone_idx)
+{
+	t_zone	*tmp;
+	t_block	*block;
+
+	tmp = g_heap.zones[zone_idx];
+	while (tmp)
+	{
+		block = (t_block *)(tmp + 1);
+		while (block < tmp->end)
+		{
+			if (!block->node_in_use && block->node_size >= sz + sizeof(t_block))
+			{
+				set_block_in_use(block, sz); // sega
+				return (block);
+			}
+			block += to_cell_size(block->node_size) + 1;
+		}
+		tmp = tmp->next;
+	}
+	tmp = zone_create(sz, zone_idx);
+	if (!tmp)
+		return (NULL);
+	add_zone(&g_heap.zones[zone_idx], tmp);
+	return (find_suitable_block(sz, zone_idx));
+}
+
+void	*ft_malloc(size_t sz)
+{
+	find_suitable_block(sz, (sz > MAX_TINY) + (sz > MAX_SMALL));
 	return NULL;
 }
 
-/*
- * finds a suitable block of small or tiny size,
- * sets the block as in use and returns a pointer
- * to memory.
- * Returns NULL if no memory left.
- */
-
-void 	*handle_small_alloc(size_t size)
-{
-	t_node *block_raw;
-
-	block_raw = find_suitable_block(size > TINY_ALLOC);
-	if (block_raw == NULL)
-		return NULL;
-	block_raw->is_free = 0;
-	return block_raw + 1;
-}
-
-void	*ft_malloc(size_t size)
-{
-	if (size == 0)
-		return NULL;
-	if (size > SMALL_ALLOC) // do large alloc
-		return handle_large_alloc(size);
-	return handle_small_alloc(size);
-}
-
-
+#include <limits.h>
 int main() {
-#include <stdio.h>
-#include <string.h>
-	char *ptr = ft_malloc(13);
-
-	printf("%s\n", "---");
-	printf("sizeof(t_header) = %lu\n", sizeof(t_zone));
-	printf("sizeof(t_footer) = %lu\n", sizeof(t_zone));
-	printf("sizeof(t_zone) = %lu\n", sizeof(t_zone));
-	printf("%s\n", "---");
-
-    strcpy(ptr, "Hello world");
-	printf("%p: %s\n", ptr, ptr);
+	ft_malloc(1);
 }

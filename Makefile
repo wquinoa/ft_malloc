@@ -1,7 +1,7 @@
 
 CC := gcc
 NAME := libmalloc.a
-SRC := libmalloc.c
+SRC := libmalloc.c mem_utils.c
 INCLUDE := libmalloc.h
 
 OBJ := $(SRC:.c=.o)
