@@ -51,7 +51,6 @@ typedef struct	s_heap {
 static t_heap g_heap;
 
 size_t 	align(size_t size, size_t bound);
-size_t	to_cell_size(size_t size);
 size_t	substract_addr(void *x, void *y);
-void 	*advance_addr(void *x, off_t offset);
+void 	*advance_aligned(void *x, off_t offset);
 #endif //LIBMALLOC_H
