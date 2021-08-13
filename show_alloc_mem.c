@@ -11,8 +11,8 @@ void 	iterate_zone(t_zone *zone, const char *fmt)
 		while (block < zone->end)
 		{
 			if (block->node_in_use)
-				printf("\t%p - %p : %zu\n", block + 1, advance_aligned(block + 1, block->node_size), block->node_size);
-			block = advance_aligned(block + 1, block->node_size);
+				printf("\t%p - %p : %zu\n", block + 1, get_next_block(block), block->node_size);
+			block = get_next_block(block);
 		}
 		zone = zone->next;
 	}

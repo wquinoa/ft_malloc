@@ -8,8 +8,6 @@
 
 // Overhead cost-related
 # define OVERHEAD sizeof(t_block)
-# define ALIGN(size, bound) (((size) + (bound - 1)) & ~(bound - 1))
-# define SIZE_TO_CELLS(size) (((ALIGN(sz, 16) + 1) >> 4) + 1)
 
 # define TINY 0
 # define SMALL 1
@@ -24,10 +22,6 @@
 # define MAX_SMALL 4096 - OVERHEAD
 # define FT_PROT_FLAGS (PROT_READ | PROT_WRITE)
 # define FT_MAP_FLAGS (MAP_ANON | MAP_PRIVATE)
-
-void			ft_free(void *ptr);
-void			*ft_malloc(size_t size);
-//void			*realloc(void *ptr, size_t size);
 
 typedef struct      s_block {
 	size_t 			prev_size: 56;
@@ -53,10 +47,18 @@ typedef struct	s_heap {
 
 extern t_heap g_heap;
 
-size_t 	align(size_t size, size_t bound);
-size_t	substract_addr(const void *x, const void *y);
-void 	*advance_aligned(const void *x, off_t offset);
+void			ft_free(void *ptr);
+void			*ft_malloc(size_t size);
+void			*ft_realloc(void *ptr, size_t size);
 
+size_t 	align(size_t size, size_t bound);
+size_t	subtract_addr(const void *x, const void *y);
+void 	*advance_aligned(const void *x, off_t offset);
+void 	*get_next_block(t_block const *x);
+
+t_zone 	*zone_create(size_t sz, size_t zone_idx);
+void	push_zone(t_zone **victim, t_zone *new);
 void	show_alloc_mem();
+void 	set_block_in_use(t_block *block, size_t sz);
 
 #endif //LIBMALLOC_H
