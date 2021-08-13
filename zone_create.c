@@ -20,6 +20,15 @@ static inline void 	set_sentinel_blocks(t_block *first, t_block* last, size_t sz
 	*last = (t_block){sz, MAGIC, 0, 0, MAGIC, 0};
 }
 
+/*
+**	Create a new zone of standard size based on 2nd parameter.
+**	If the requested size is not TINY_ZONE or SMALL_ZONE, creates a large zone,
+**	aligned to getpagesize().
+**	Next, if the mmap call is successful, initialize the beginning and the end of zone.
+**
+**	Returns 0 if mmap() fails, 1 on success.
+*/
+
 int 				zone_create(size_t sz, size_t zone_idx, t_zone **mem)
 {
 	t_zone					*new;

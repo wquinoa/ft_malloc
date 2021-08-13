@@ -26,7 +26,7 @@ typedef struct      s_block {
 	size_t 			prev_size: 56;
 	size_t 			magic: 7;
 	size_t 			prev_in_use: 1;
-	size_t 			node_size: 56;
+	size_t 			this_size: 56;
 	size_t 			magic_2: 7;
 	size_t			node_in_use: 1;
 }				    t_block;
@@ -45,10 +45,6 @@ typedef struct	s_heap {
 }				t_heap;
 
 extern t_heap g_heap;
-
-/*
-**	man malloc, man free, man realloc
-*/
 
 void	*ft_malloc(size_t size);
 void	ft_free(void *ptr);

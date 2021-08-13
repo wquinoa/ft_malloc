@@ -1,7 +1,7 @@
 #include "libmalloc.h"
 
 /*
-**	divides the empty block in two parts,
+**	Divides the empty block in two parts,
 **	marks part 1 as in use, marks part 2's size
 **	as (old size) - (new_size).
 **	Returns 1 if a new header was created, 0 otherwise.
@@ -18,7 +18,7 @@ int 			set_block_in_use(t_block *block, size_t sz)
 	{
 		*mid = (t_block){sz, MAGIC, 1,
 				subtract_addr(old_end, mid + 1), MAGIC, 0};
-		old_end->prev_size = mid->node_size;
+		old_end->prev_size = mid->this_size;
 		old_end->prev_in_use = 0;
 	}
 	else
@@ -27,21 +27,28 @@ int 			set_block_in_use(t_block *block, size_t sz)
 		mid->prev_in_use = 1;
 	}
 	block->node_in_use = 1;
-	block->node_size = sz;
+	block->this_size = sz;
 	g_heap.total_occupied += sz;
 	return (old_end == mid);
 }
 
-static int 		find_suitable_block(t_zone *tmp, size_t sz, t_block **mem)
+/*
+**	Finds a block of requested size sz and puts it in *mem.
+**	If the search was successful, subtracts the block size
+**	from the corresponding zone's meta variable.
+**	Returns 1 on success, 0 on failure.
+*/
+
+static int 		find_suitable_block(t_zone *zone, size_t sz, t_block **mem)
 {
 	t_block		*block;
 
-	block = (t_block *)(tmp + 1);
-	while (block < tmp->end)
+	block = (t_block *)(zone + 1);
+	while (block < zone->end)
 	{
-		if (!block->node_in_use && block->node_size >= sz)
+		if (!block->node_in_use && block->this_size >= sz)
 		{
-			tmp->leftover_mem -=
+			zone->leftover_mem -=
 					(sz + sizeof(t_block) * set_block_in_use(block, sz));
 			*mem = (block + 1);
 			return (1);

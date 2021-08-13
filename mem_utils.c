@@ -33,5 +33,5 @@ inline void		*advance_aligned(const void *x, off_t offset)
 
 inline void 	*get_next_block(t_block const *x)
 {
-	return (advance_aligned(x + 1, x->node_size));
+	return (advance_aligned(x + 1, x->this_size));
 }

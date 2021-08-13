@@ -20,12 +20,12 @@ void	ft_free(void *mem)
 		printf("double free\n");
 		return;
 	}
-	next = advance_aligned(header + 1, header->node_size);
+	next = advance_aligned(header + 1, header->this_size);
 	header->node_in_use = 0;
-	g_heap.total_occupied -= header->node_size;
-	header->node_size = subtract_addr(next, header + 1);
+	g_heap.total_occupied -= header->this_size;
+	header->this_size = subtract_addr(next, header + 1);
 	next->prev_in_use = 0;
-	next->prev_size = header->node_size;
+	next->prev_size = header->this_size;
 }
 
 int main() {
