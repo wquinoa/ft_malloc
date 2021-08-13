@@ -6,7 +6,6 @@
 # include <pthread.h>
 // https://my.eng.utah.edu/~cs4400/malloc.pdf
 
-// Overhead cost-related
 # define OVERHEAD sizeof(t_block)
 
 # define TINY 0
@@ -19,7 +18,7 @@
 # define ZONE_LARGE 0
 
 # define MAX_TINY 64 - OVERHEAD
-# define MAX_SMALL 4096 - OVERHEAD
+# define MAX_SMALL 128 - OVERHEAD
 # define FT_PROT_FLAGS (PROT_READ | PROT_WRITE)
 # define FT_MAP_FLAGS (MAP_ANON | MAP_PRIVATE)
 
@@ -47,18 +46,21 @@ typedef struct	s_heap {
 
 extern t_heap g_heap;
 
-void			ft_free(void *ptr);
-void			*ft_malloc(size_t size);
-void			*ft_realloc(void *ptr, size_t size);
+/*
+**	man malloc, man free, man realloc
+*/
+
+void	*ft_malloc(size_t size);
+void	ft_free(void *ptr);
+void	*ft_realloc(void *ptr, size_t size);
 
 size_t 	align(size_t size, size_t bound);
-size_t	subtract_addr(const void *x, const void *y);
+off_t 	subtract_addr(const void *x, const void *y);
 void 	*advance_aligned(const void *x, off_t offset);
 void 	*get_next_block(t_block const *x);
 
-t_zone 	*zone_create(size_t sz, size_t zone_idx);
+int 	zone_create(size_t sz, size_t zone_idx, t_zone **mem);
 void	push_zone(t_zone **victim, t_zone *new);
 void	show_alloc_mem();
-void 	set_block_in_use(t_block *block, size_t sz);
 
 #endif //LIBMALLOC_H

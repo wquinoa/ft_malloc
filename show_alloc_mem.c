@@ -3,11 +3,12 @@
 #include <stdio.h>
 void 	iterate_zone(t_zone *zone, const char *fmt)
 {
-	t_block const *block = (t_block *)(zone + 1);
+	t_block *block;
 
 	while (zone)
 	{
 		printf(fmt, zone);
+		block = (t_block *)(zone + 1);
 		while (block < zone->end)
 		{
 			if (block->node_in_use)

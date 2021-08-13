@@ -31,10 +31,8 @@ void	ft_free(void *mem)
 int main() {
 	void *ptr;
 
-	ptr = ft_malloc(1);
-	ptr = ft_realloc(ptr, 17);
-
+	for (int i = 0; i < 100; i++)
+		ptr = ft_malloc(65);
 	show_alloc_mem();
 	ft_free(ptr);
-	show_alloc_mem();
 }
