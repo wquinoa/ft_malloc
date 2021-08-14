@@ -7,7 +7,7 @@
 // https://my.eng.utah.edu/~cs4400/malloc.pdf
 
 # define OVERHEAD sizeof(t_block)
-# define ALIGNMENT 8
+# define ALIGNMENT 16
 
 # define TINY 0
 # define SMALL 1
@@ -61,7 +61,7 @@ int 	zone_create(size_t sz, size_t zone_idx, t_zone **mem);
 void	push_zone(t_zone **victim, t_zone *new);
 
 int 	str_copy(char *buf, char const *src);
-//int		ft_puthex(char *buf, unsigned long long n, int base);
+int		ft_puthex(char *buf, unsigned long long n, int base);
 void	show_alloc_mem();
 void	show_alloc_mem_ex();
 

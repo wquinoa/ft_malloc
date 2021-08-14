@@ -94,7 +94,6 @@ void			*malloc(size_t sz)
 	if (!zone_create(sz, zone_idx, &tmp))
 		return (NULL);
 	push_zone(g_heap->zones + zone_idx, tmp);
-	show_alloc_mem();
 	pthread_mutex_unlock(&g_mallock);
 	return (malloc(sz));
 }
