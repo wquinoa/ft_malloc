@@ -7,6 +7,7 @@
 // https://my.eng.utah.edu/~cs4400/malloc.pdf
 
 # define OVERHEAD sizeof(t_block)
+# define ALIGNMENT 8
 
 # define TINY 0
 # define SMALL 1
@@ -44,11 +45,12 @@ typedef struct	s_heap {
 	size_t 		total_occupied;
 }				t_heap;
 
-extern t_heap g_heap;
+extern	t_heap			*g_heap;
+extern	pthread_mutex_t	g_mallock;
 
-void	*ft_malloc(size_t size);
-void	ft_free(void *ptr);
-void	*ft_realloc(void *ptr, size_t size);
+void	*malloc(size_t size);
+void	free(void *ptr);
+void	*realloc(void *ptr, size_t size);
 
 size_t 	align(size_t size, size_t bound);
 off_t 	subtract_addr(const void *x, const void *y);
@@ -57,6 +59,10 @@ void 	*get_next_block(t_block const *x);
 
 int 	zone_create(size_t sz, size_t zone_idx, t_zone **mem);
 void	push_zone(t_zone **victim, t_zone *new);
+
+int 	str_copy(char *buf, char const *src);
+int		ft_puthex(char *buf, unsigned long long n, int base);
 void	show_alloc_mem();
+void	show_alloc_mem_ex();
 
 #endif //LIBMALLOC_H
