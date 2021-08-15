@@ -1,4 +1,4 @@
-#include "libmalloc.h"
+#include "libft_malloc.h"
 
 /*
 **	Divides the empty block in two parts,
@@ -28,7 +28,7 @@ int 			set_block_in_use(t_block *block, size_t sz)
 	}
 	block->node_in_use = 1;
 	block->this_size = sz;
-	g_heap->total_occupied += sz;
+	get_heap()->total_occupied += sz;
 	return (old_end == mid);
 }
 
@@ -58,42 +58,28 @@ static int 		find_suitable_block(t_zone *zone, size_t sz, t_block **mem)
 	return (0);
 }
 
-t_heap 			*malloc_init()
-{
-	pthread_mutex_init(&g_mallock, NULL);
-	g_heap = mmap(NULL, getpagesize(), FT_PROT_FLAGS, FT_MAP_FLAGS, -1, 0);
-	if (!g_heap)
-		return (NULL);
-	g_heap->zones[0] = NULL;
-	g_heap->zones[1] = NULL;
-	g_heap->zones[2] = NULL;
-	g_heap->total_occupied = 0;
-	g_heap->total_size = 0;
-	return (g_heap);
-}
-
 void			*malloc(size_t sz)
 {
-	int const	zone_idx = (sz > MAX_TINY) + (sz > MAX_SMALL);;
+	int const	zone_idx = (sz > MAX_TINY) + (sz > MAX_SMALL);
 	t_zone		*tmp;
 	t_block 	*mem;
 
-	if (!g_heap && !malloc_init())
+	if (!get_heap() && !init_heap())
 		return (NULL);
-	pthread_mutex_lock(&g_mallock);
-	tmp = g_heap->zones[zone_idx];
+	lock_main();
+	tmp = get_heap()->zones[zone_idx];
 	while (tmp)
 	{
 		if (tmp->leftover_mem >= sz && find_suitable_block(tmp, sz, &mem))
 		{
-			pthread_mutex_unlock(&g_mallock);
+			unlock_main();
 			return (mem);
 		}
 		tmp = tmp->next;
 	}
 	if (!zone_create(sz, zone_idx, &tmp))
 		return (NULL);
-	push_zone(g_heap->zones + zone_idx, tmp);
-	pthread_mutex_unlock(&g_mallock);
+	push_zone(get_heap()->zones + zone_idx, tmp);
+	unlock_main();
 	return (malloc(sz));
 }

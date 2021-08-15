@@ -1,6 +1,6 @@
-#include "libmalloc.h"
+#include "libft_malloc.h"
 
-void	push_zone(t_zone **victim, t_zone *new)
+void __attribute__ ((visibility ("hidden")))	push_zone(t_zone **victim, t_zone *new)
 {
 	t_zone *tmp;
 
@@ -29,7 +29,7 @@ static inline void 	set_sentinel_blocks(t_block *first, t_block* last, size_t sz
 **	Returns 0 if mmap() fails, 1 on success.
 */
 
-int 				zone_create(size_t sz, size_t zone_idx, t_zone **mem)
+int __attribute__ ((visibility ("hidden")))	zone_create(size_t sz, size_t zone_idx, t_zone **mem)
 {
 	t_zone					*new;
 	static const size_t 	zone_sizes[3] = { ZONE_TINY, ZONE_SMALL, ZONE_LARGE };
@@ -45,7 +45,7 @@ int 				zone_create(size_t sz, size_t zone_idx, t_zone **mem)
 	new->next = NULL;
 	new->end = advance_aligned(new, effective_mem);
 	new->leftover_mem = effective_mem - OVERHEAD * 2 - sizeof(t_zone);
-	g_heap->total_size += new->leftover_mem;
+	get_heap()->total_size += new->leftover_mem;
 	set_sentinel_blocks((t_block *)(new + 1), new->end - 1, new->leftover_mem);
 	*mem = new;
 	return (1);

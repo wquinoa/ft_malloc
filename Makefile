@@ -4,10 +4,13 @@ ifeq ($(HOSTTYPE),)
 endif
 
 NAME := libft_malloc_$(HOSTTYPE).so
-SOURCE := libmalloc.c malloc.c mem_utils.c show_alloc_mem.c zone_create.c realloc.c show_alloc_mem_ex.c
+SOURCE :=	malloc.c free.c	realloc.c\
+ 			show_alloc_mem.c zone_create.c\
+ 			show_alloc_mem_ex.c malloc_global.c\
+ 			mem_utils.c printing_utils.c
 
 CC := gcc
-CFLAGS := -I/src/libmalloc.h -Wall -Werror -Wextra
+CFLAGS := -I/src/libmalloc.h -Wall -Werror -Wextra -Wcast-align
 SRC := $(addprefix src/, $(SOURCE))
 OBJ := $(SRC:.c=.o)
 
@@ -20,9 +23,6 @@ all: $(NAME)
 $(NAME): $(OBJ)
 	gcc $(CFLAGS) -shared -o $@ -fPIC $^
 
-dylib: $(OBJ)
-	gcc $(CFLAGS) -dynamiclib $^ -o libft_malloc_$(HOSTTYPE).dylib
-
 clean:
 	rm -rf a.out* $(OBJ)
 
@@ -30,10 +30,6 @@ fclean: clean
 	rm -rf $(NAME)
 
 re: fclean all
-
-run: $(SRC)
-	gcc -g  $(SRC)
-	./a.out
 
 test: all
 	 $(ENVARS) ls

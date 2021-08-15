@@ -7,7 +7,7 @@
 // https://my.eng.utah.edu/~cs4400/malloc.pdf
 
 # define OVERHEAD sizeof(t_block)
-# define ALIGNMENT 8
+# define ALIGNMENT 16
 
 # define TINY 0
 # define SMALL 1
@@ -45,24 +45,29 @@ typedef struct	s_heap {
 	size_t 		total_occupied;
 }				t_heap;
 
-extern	t_heap			*g_heap;
-extern	pthread_mutex_t	g_mallock;
+void			*malloc(size_t size);
+void			free(void *ptr);
+void			*realloc(void *ptr, size_t size);
 
-void	*malloc(size_t size);
-void	free(void *ptr);
-void	*realloc(void *ptr, size_t size);
+void			show_alloc_mem();
+void			show_alloc_mem_ex();
 
-size_t 	align(size_t size, size_t bound);
-off_t 	subtract_addr(const void *x, const void *y);
-void 	*advance_aligned(const void *x, off_t offset);
-void 	*get_next_block(t_block const *x);
+t_heap 			*init_heap(void);
+t_heap			*get_heap(void);
+void 			lock_main(void);
+void 			private_lock_init(void);
+void 			unlock_main(void);
+int 			zone_create(size_t sz, size_t zone_idx, t_zone **mem);
+void			push_zone(t_zone **victim, t_zone *new);
+void			iterate_zone(t_zone *zone, const char *type, void (*f)(t_block *block));
 
-int 	zone_create(size_t sz, size_t zone_idx, t_zone **mem);
-void	push_zone(t_zone **victim, t_zone *new);
+size_t 			align(size_t size, size_t bound);
+off_t 			subtract_addr(const void *x, const void *y);
+void 			*advance_aligned(const void *x, off_t offset);
+void 			*get_next_block(t_block const *x);
 
-int 	str_copy(char *buf, char const *src);
-//int		ft_puthex(char *buf, unsigned long long n, int base);
-void	show_alloc_mem();
-void	show_alloc_mem_ex();
+
+void 			str_copy(char **buf, char const *src);
+void			ft_puthex(char **buf, unsigned long long n, int base);
 
 #endif //LIBMALLOC_H

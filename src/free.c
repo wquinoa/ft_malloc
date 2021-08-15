@@ -1,7 +1,4 @@
-#include "libmalloc.h"
-
-t_heap			*g_heap;
-pthread_mutex_t g_mallock;
+#include "libft_malloc.h"
 
 static inline int 	is_freeable(t_block *block)
 {
@@ -20,12 +17,12 @@ void	free(void *mem)
 		//printf("double free\n");
 		return;
 	}
-	pthread_mutex_lock(&g_mallock);
+	lock_main();
 	next = advance_aligned(header + 1, header->this_size);
 	header->node_in_use = 0;
-	g_heap->total_occupied -= header->this_size;
+	get_heap()->total_occupied -= header->this_size;
 	header->this_size = subtract_addr(next, header + 1);
 	next->prev_in_use = 0;
 	next->prev_size = header->this_size;
-	pthread_mutex_unlock(&g_mallock);
+	unlock_main();
 }
