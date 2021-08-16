@@ -12,7 +12,7 @@ t_heap __attribute__ ((visibility ("hidden")))	*get_heap(void)
 t_heap __attribute__ ((visibility ("hidden")))	*init_heap(void)
 {
 	g_heap = mmap(NULL, getpagesize(), FT_PROT_FLAGS, FT_MAP_FLAGS, -1, 0);
-	if (!g_heap)
+	if (g_heap == MAP_FAILED)
 		return (NULL);
 	private_lock_init();
 	g_heap->zones[TINY] = NULL;

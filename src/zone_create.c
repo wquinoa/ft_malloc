@@ -40,13 +40,13 @@ int __attribute__ ((visibility ("hidden")))	zone_create(size_t sz, size_t zone_i
 	else
 		effective_mem = zone_sizes[zone_idx];
 	new = mmap(NULL, effective_mem, FT_PROT_FLAGS, FT_MAP_FLAGS, -1, 0);
-	if (!new)
+	*mem = new;
+	if (new == MAP_FAILED)
 		return (0);
 	new->next = NULL;
 	new->end = advance_aligned(new, effective_mem);
 	new->leftover_mem = effective_mem - OVERHEAD * 2 - sizeof(t_zone);
 	get_heap()->total_size += new->leftover_mem;
 	set_sentinel_blocks((t_block *)(new + 1), new->end - 1, new->leftover_mem);
-	*mem = new;
 	return (1);
 }
