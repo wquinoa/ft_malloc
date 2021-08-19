@@ -29,7 +29,7 @@ static size_t	ft_nlen(size_t n, int base)
 
 void			ft_puthex(char **buf, unsigned long long n, int base)
 {
-	char const *base_s = "01234567890abcdef";
+	char const *base_s = "0123456789abcdef";
 	size_t div;
 	char *dst;
 

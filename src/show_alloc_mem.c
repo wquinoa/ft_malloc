@@ -29,7 +29,7 @@ void			iterate_zone(t_zone *zone,
 		str_copy(&ptr, "\n");
 		write(1, (char *)(get_heap() + 1), subtract_addr(ptr, get_heap() + 1));
 		block = (t_block *)(zone + 1);
-		while (block < zone->end)
+		while (block < zone->end - 1)
 		{
 			if (block->node_in_use)
 				f(block);

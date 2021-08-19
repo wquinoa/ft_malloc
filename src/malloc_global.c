@@ -11,21 +11,14 @@ t_heap __attribute__ ((visibility ("hidden")))	*get_heap(void)
 
 t_heap __attribute__ ((visibility ("hidden")))	*init_heap(void)
 {
+	if (g_heap)
+		return (g_heap);
 	g_heap = mmap(NULL, getpagesize(), FT_PROT_FLAGS, FT_MAP_FLAGS, -1, 0);
 	if (g_heap == MAP_FAILED)
 		return (NULL);
-	private_lock_init();
-	g_heap->zones[TINY] = NULL;
-	g_heap->zones[SMALL] = NULL;
-	g_heap->zones[LARGE] = NULL;
-	g_heap->total_occupied = 0;
-	g_heap->total_size = 0;
-	return (g_heap);
-}
-
-void __attribute__ ((visibility ("hidden")))	private_lock_init(void)
-{
+	*g_heap = (t_heap){ {0}, 0, 0};
 	pthread_mutex_init(&g_mallock, NULL);
+	return (g_heap);
 }
 
 void __attribute__ ((visibility ("hidden")))	lock_main(void)

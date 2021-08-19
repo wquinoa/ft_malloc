@@ -9,10 +9,11 @@ SOURCE :=	malloc.c free.c	realloc.c\
  			show_alloc_mem_ex.c malloc_global.c\
  			mem_utils.c printing_utils.c
 
-CC := gcc
-CFLAGS := -I/src/libmalloc.h -Wall -Werror -Wextra -Wcast-align
+BIN := ./bin/
+CFLAGS := -I/src/libft_malloc.h -Wall -Werror -Wextra -Wcast-align
 SRC := $(addprefix src/, $(SOURCE))
-OBJ := $(SRC:.c=.o)
+OBJECTS := $(SOURCE:c=o)
+OBJ := $(addprefix $(BIN), $(SOURCE:c=o))
 
 ENVARS := DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES=/Users/user/ft_malloc/$(NAME)
 
@@ -23,13 +24,29 @@ all: $(NAME)
 $(NAME): $(OBJ)
 	gcc $(CFLAGS) -shared -o $@ -fPIC $^
 
+$(BIN):
+	mkdir $@
+
+$(BIN)%.o: src/%.c | $(BIN)
+	gcc $(CFLAGS) -o $@ -c $<
+	ln -s $(NAME) libft_malloc.so
+
 clean:
-	rm -rf a.out* $(OBJ)
+	rm -rf $(OBJ)
 
 fclean: clean
-	rm -rf $(NAME)
+	rm -rf $(NAME) libft_malloc.so a.out*
 
 re: fclean all
 
 test: all
-	 $(ENVARS) ls
+	$(CC) main.c libft_malloc_x86_64_Darwin.so && $(ENVARS) ./a.out
+
+test_clear: all
+	$(ENVARS) clear
+
+test_ls: all
+	$(ENVARS) ls
+
+test_man: all
+	$(ENVARS) man malloc

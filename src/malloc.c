@@ -58,28 +58,33 @@ static int 		find_suitable_block(t_zone *zone, size_t sz, t_block **mem)
 	return (0);
 }
 
-void			*malloc(size_t sz)
+void			*malloc_internal(size_t sz)
 {
 	int const	zone_idx = (sz > MAX_TINY) + (sz > MAX_SMALL);
 	t_zone		*tmp;
 	t_block 	*mem;
 
-	if (!get_heap() && !init_heap())
+	if (!init_heap())
 		return (NULL);
-	lock_main();
 	tmp = get_heap()->zones[zone_idx];
 	while (tmp)
 	{
 		if (tmp->leftover_mem >= sz && find_suitable_block(tmp, sz, &mem))
-		{
-			unlock_main();
 			return (mem);
-		}
 		tmp = tmp->next;
 	}
 	if (!zone_create(sz, zone_idx, &tmp))
 		return (NULL);
 	push_zone(get_heap()->zones + zone_idx, tmp);
+	return (malloc_internal(sz));
+}
+
+void			*malloc(size_t sz)
+{
+	void *res;
+
+	lock_main();
+	res = malloc_internal(sz);
 	unlock_main();
-	return (malloc(sz));
+	return (res);
 }

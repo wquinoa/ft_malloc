@@ -12,12 +12,37 @@ void __attribute__ ((visibility ("hidden")))	push_zone(t_zone **victim, t_zone *
 	tmp = *victim;
 	*victim = new;
 	new->next = tmp;
+	if (new->next)
+		new->next->prev = new;
 }
+
+void __attribute__ ((visibility ("hidden")))	del_zone(t_zone *victim)
+{
+	size_t const	unmap_sz = align(victim->total_mem, getpagesize());
+	int 			i;
+
+	if ((victim)->prev)
+		(victim)->prev->next = (victim)->next;
+	if ((victim)->next)
+		(victim)->next->prev = (victim)->prev;
+	munmap(victim, unmap_sz);
+	i = 0;
+	while (i < 3)
+	{
+		if (get_heap()->zones[i] == victim)
+			get_heap()->zones[i] = NULL;
+		i++;
+	}
+}
+
+/*
+**	[zone][prev=0;this=sz]_______free mem:sz_______[prev=sz;this=0]
+*/
 
 static inline void 	set_sentinel_blocks(t_block *first, t_block* last, size_t sz)
 {
 	*first = (t_block){0, MAGIC, 1, sz, MAGIC,0};
-	*last = (t_block){sz, MAGIC, 0, 0, MAGIC, 0};
+	*last = (t_block){sz, MAGIC, 0, 0, MAGIC, 1};
 }
 
 /*
@@ -43,9 +68,10 @@ int __attribute__ ((visibility ("hidden")))	zone_create(size_t sz, size_t zone_i
 	*mem = new;
 	if (new == MAP_FAILED)
 		return (0);
-	new->next = NULL;
+	new->prev = NULL;
 	new->end = advance_aligned(new, effective_mem);
 	new->leftover_mem = effective_mem - OVERHEAD * 2 - sizeof(t_zone);
+	new->total_mem = new->leftover_mem;
 	get_heap()->total_size += new->leftover_mem;
 	set_sentinel_blocks((t_block *)(new + 1), new->end - 1, new->leftover_mem);
 	return (1);

@@ -7,11 +7,11 @@ static void 	ft_hex_char(char **buf, unsigned char *mem, size_t i)
 		ft_puthex(buf, (unsigned long long)(mem), 16);
 		str_copy(buf, " ");
 	}
-	if (*mem < 0x10)
+	if (*mem < 16)
 		ft_puthex(buf, 0, 16);
-	ft_puthex(buf, *mem, 16);
+	ft_puthex(buf, *mem | 0ULL, 16);
 	str_copy(buf, " ");
-	if ((i & 15) == 15)
+	if ((i % 15) == 0)
 		str_copy(buf, "\n");
 }
 

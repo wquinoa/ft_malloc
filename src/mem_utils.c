@@ -35,3 +35,13 @@ inline void 	*get_next_block(t_block const *x)
 {
 	return (advance_aligned(x + 1, x->this_size));
 }
+
+inline void 	*get_prev_block(t_block const *x)
+{
+	return (advance_aligned(x - 1, -x->prev_size));
+}
+
+inline int 	check_magic(t_block const *current)
+{
+	return (current->magic == current->magic_2 && current->magic_2 == MAGIC);
+}
