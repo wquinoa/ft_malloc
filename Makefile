@@ -23,13 +23,13 @@ all: $(NAME)
 
 $(NAME): $(OBJ)
 	gcc $(CFLAGS) -shared -o $@ -fPIC $^
+	ln -sf $(NAME) libft_malloc.so
 
 $(BIN):
 	mkdir $@
 
 $(BIN)%.o: src/%.c | $(BIN)
 	gcc $(CFLAGS) -o $@ -c $<
-	ln -s $(NAME) libft_malloc.so
 
 clean:
 	rm -rf $(OBJ)
@@ -49,4 +49,4 @@ test_ls: all
 	$(ENVARS) ls
 
 test_man: all
-	$(ENVARS) man malloc
+	$(ENVARS) man ascii

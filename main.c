@@ -5,6 +5,12 @@
 #include <unistd.h>
 #include "src/libft_malloc.h"
 
+#include <stdio.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <stdlib.h>
+
+
 int main()
 {
 	char *ptr[5];
@@ -12,9 +18,9 @@ int main()
 	write(1, "\nMAIN START\n\n", 13);
 	for (int i = 0; i < 5; i++) {
 		ptr[i] = malloc(1);
-		*ptr[i] = '*';
+		ptr[i][0] = '*';
 	}
-	show_alloc_mem_ex();
+	show_alloc_mem();
 	for (int i = 0; i < 5; i++) {
 		free(ptr[i]);
 	}

@@ -44,7 +44,7 @@ static int 		find_suitable_block(t_zone *zone, size_t sz, t_block **mem)
 	t_block		*block;
 
 	block = (t_block *)(zone + 1);
-	while (block < zone->end)
+	while (block < zone->end - 1)
 	{
 		if (!block->node_in_use && block->this_size >= sz)
 		{

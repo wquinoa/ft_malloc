@@ -12,15 +12,6 @@
 
 static t_zone 		*get_zone_by_addr(t_block *mem)
 {
-	int const			zone_idx = (mem->this_size > MAX_TINY) + (mem->this_size > MAX_SMALL);
-	static const size_t zone_sizes[3] = { ZONE_TINY, ZONE_SMALL, 0 };
-	off_t				offset;
-
-	if (zone_idx != LARGE)
-	{
-		offset = (unsigned long long)mem % zone_sizes[zone_idx];
-		return (advance_aligned(mem, -offset));
-	}
 	while (mem->prev_in_use == 0)
 		mem = get_prev_block(mem);
 	return ((t_zone *)mem - 1);
@@ -45,7 +36,6 @@ static void 		try_defrag(t_block *header, t_block *next, t_zone *zone)
 	header->this_size = subtract_addr(next, header + 1);
 	next->prev_in_use = 0;
 	next->prev_size = header->this_size;
-
 }
 
 void 				free_internal(void *mem)

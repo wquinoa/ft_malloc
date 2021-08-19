@@ -6,6 +6,7 @@ void __attribute__ ((visibility ("hidden")))	push_zone(t_zone **victim, t_zone *
 
 	if (!*victim)
 	{
+		new->next = NULL;
 		*victim = new;
 		return ;
 	}

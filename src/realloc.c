@@ -23,7 +23,6 @@ void 			realloc_set(t_block *start, t_block *mid, size_t sz)
 	diff = sz - start->this_size;
 	old_end = get_next_block(mid);
 	old_end->prev_size = mid->this_size - diff;
-	write(1, "sega\n", 5);
 	mid = advance_aligned(mid, diff);
 	*mid = (t_block){ sz, MAGIC, 1, old_end->prev_size, MAGIC, 0 };
 	start->this_size = sz;

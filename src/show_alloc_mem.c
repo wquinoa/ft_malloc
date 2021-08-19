@@ -45,6 +45,7 @@ void	show_alloc_mem()
 
 	if (!get_heap())
 		return;
+	lock_main();
 	iterate_zone(get_heap()->zones[TINY], "TINY : ", print_normal);
 	iterate_zone(get_heap()->zones[SMALL], "SMALL : ", print_normal);
 	iterate_zone(get_heap()->zones[LARGE], "LARGE : ", print_normal);
@@ -53,4 +54,5 @@ void	show_alloc_mem()
 	ft_puthex(&ptr, get_heap()->total_occupied, 10);
 	str_copy(&ptr, " bytes\n");
 	write(1, (char *)(get_heap() + 1), subtract_addr(ptr, get_heap() + 1));
+	unlock_main();
 }
